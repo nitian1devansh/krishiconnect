@@ -1,0 +1,59 @@
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+coverage/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# TypeScript
+*.tsbuildinfo
+
+# Prisma
+**/generated/
+
+# Testing
+.nyc_output/
+playwright-report/
+test-results/
+
+# Temporary files
+tmp/
+temp/
+.cache/
+
+# Deployment
+.vercel/
+.netlify/
+
+# Miscellaneous
+*.local
+*.bak
+*.orig

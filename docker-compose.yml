@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: krishiconnect_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-krishi_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-krishi_secure_password_2026}
+      POSTGRES_DB: ${DB_NAME:-krishiconnect}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-krishi_admin} -d ${DB_NAME:-krishiconnect}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: krishiconnect_redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: krishiconnect_api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://${DB_USER:-krishi_admin}:${DB_PASSWORD:-krishi_secure_password_2026}@postgres:5432/${DB_NAME:-krishiconnect}?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-krishi_connect_super_jwt_secret_dev_32char}
+      CORS_ORIGIN: http://localhost:3000
+    ports:
+      - "4000:4000"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: krishiconnect_web
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      NEXT_PUBLIC_API_URL: http://localhost:4000/api/v1
+      NEXT_PUBLIC_SOCKET_URL: http://localhost:4000
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
+  redis_data:
+
